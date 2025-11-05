@@ -17,6 +17,8 @@ public class WeaponManager : MonoBehaviour
         switchAction.action.performed += _ => SwitchWeapon();
     }
 
+
+
     private void OnDisable()
     {
         // Hủy đăng ký sự kiện để tránh lỗi
@@ -24,27 +26,55 @@ public class WeaponManager : MonoBehaviour
         switchAction.action.Disable();
     }
 
+    // === HÀM START ĐÃ ĐƯỢC SỬA LỖI ===
     void Start()
     {
-        // Lúc bắt đầu, chỉ bật vũ khí đầu tiên và tắt hết các vũ khí còn lại
-        for (int i = 0; i < weapons.Count; i++)
+        // 1. TẮT TẤT CẢ các súng trước.
+        // Điều này đảm bảo mọi súng đều ở trạng thái "tắt"
+        // và sẵn sàng nhận lệnh OnEnable() một cách chính xác.
+        foreach (GameObject weapon in weapons)
         {
-            weapons[i].SetActive(i == currentWeaponIndex);
+            if (weapon != null)
+            {
+                weapon.SetActive(false);
+            }
+        }
+
+        // 2. Bây giờ, chỉ BẬT súng đầu tiên (index 0)
+        // (Kiểm tra an toàn nếu danh sách không rỗng)
+        if (weapons.Count > 0 && weapons[currentWeaponIndex] != null)
+        {
+            // Vì súng này 100% đang tắt, lệnh SetActive(true)
+            // sẽ kích hoạt OnEnable() của súng.
+            weapons[currentWeaponIndex].SetActive(true);
         }
     }
 
     private void SwitchWeapon()
     {
-        // 1. Tắt vũ khí hiện tại
-        weapons[currentWeaponIndex].SetActive(false);
+        // === SỬA LỖI: Thêm kiểm tra null (Phần này đã đúng) ===
+        // 1. Lấy vũ khí hiện tại
+        GameObject currentWeapon = weapons[currentWeaponIndex];
 
-        // 2. Chuyển sang index của vũ khí tiếp theo
-        // Dùng toán tử modulo (%) để quay vòng lại từ đầu khi đến cuối danh sách
+        // 2. Kiểm tra xem nó có còn tồn tại không TRƯỚC KHI sử dụng
+        if (currentWeapon != null)
+        {
+            currentWeapon.SetActive(false);
+        }
+        // === KẾT THÚC SỬA LỖI ===
+
+        // 3. Chuyển sang index của vũ khí tiếp theo
         currentWeaponIndex = (currentWeaponIndex + 1) % weapons.Count;
 
-        // 3. Bật vũ khí mới
-        weapons[currentWeaponIndex].SetActive(true);
+        // === SỬA LỖI: Thêm kiểm tra null (Phần này đã đúng) ===
+        // 4. Lấy vũ khí mới
+        GameObject newWeapon = weapons[currentWeaponIndex];
 
-        Debug.Log("Switched to: " + weapons[currentWeaponIndex].name);
+        // 5. Kiểm tra xem nó có tồn tại không TRƯỚC KHI kích hoạt
+        if (newWeapon != null)
+        {
+            newWeapon.SetActive(true);
+        }
+        // === KẾT THÚC SỬA LỖI ===
     }
 }

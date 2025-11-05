@@ -106,7 +106,7 @@ MonoBehaviour:
   lifetime: 2
   destroyOnLayers:
   - Rock
-  damage: 10
+  bloodPrefab: {fileID: 2549957347913063906, guid: 3edb64259350a3a44b74942403d5098e, type: 3}
 --- !u!50 &8608918397357431855
 Rigidbody2D:
   serializedVersion: 5

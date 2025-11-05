@@ -19,9 +19,9 @@ TagManager:
   - Gun
   - Bullet
   - Rock
-  - 
-  - 
-  - 
+  - Coin
+  - Arrow
+  - Blood
   - 
   - 
   - 
@@ -72,6 +72,15 @@ TagManager:
     locked: 0
   - name: Round Text
     uniqueID: 2327540565
+    locked: 0
+  - name: Coin
+    uniqueID: 1952414215
+    locked: 0
+  - name: Arrow
+    uniqueID: 4110445145
+    locked: 0
+  - name: Blood
+    uniqueID: 1338745131
     locked: 0
   m_RenderingLayers:
   - Default

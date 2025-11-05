@@ -7,33 +7,63 @@ public class Shotgun : Gun
     [SerializeField] private int bulletsPerShot = 8; // Số lượng viên đạn (mảnh) bắn ra trong 1 lần
     [SerializeField] private float spreadAngle = 25f; // Độ tỏa tối đa của chùm đạn (tính bằng độ)
 
-    // Ghi đè (override) hàm Shoot() của lớp Gun để có hành vi riêng
+    // Ghi đè (override) hàm Shoot() của lớp Gun
     protected override void Shoot()
     {
-        // Kiểm tra xem có thể bắn không (dựa trên thời gian và input)
+        // 1. Tính toán tốc độ bắn (GIỐNG HỆT GUN.CS)
+        float attackSpeedMultiplier = 1.0f;
+        if (playerStats != null)
+        {
+            attackSpeedMultiplier = playerStats.GetTotalAttackSpeedMultiplier();
+        }
+        float finalShotDelay = shotDelay / attackSpeedMultiplier;
+
+        // 2. Kiểm tra xem có thể bắn không
         if (shoot.action.ReadValue<float>() > 0 && Time.time >= nextShot)
         {
-            // Bắn ra một chùm đạn với số lượng đã định
-            for (int i = 0; i < bulletsPerShot; i++)
+            // 3. Tính toán sát thương (GIỐNG HỆT GUN.CS)
+            // (Giờ chúng ta có thể truy cập baseDamage vì nó là 'protected')
+            float finalDamage = baseDamage;
+            if (playerStats != null)
             {
-                FireWithSpread();
+                finalDamage += playerStats.GetTotalDamage(); // Cộng thêm bonus
             }
 
-            // Đặt lại thời gian hồi chiêu sau khi bắn
-            nextShot = Time.time + shotDelay;
+            // 4. Bắn ra một chùm đạn, truyền sát thương cho từng viên
+            for (int i = 0; i < bulletsPerShot; i++)
+            {
+                // Truyền 'finalDamage' vào hàm
+                FireWithSpread(finalDamage);
+            }
+
+            // 5. Đặt lại thời gian hồi chiêu
+            nextShot = Time.time + finalShotDelay;
         }
     }
 
-    private void FireWithSpread()
+    // Hàm này giờ nhận 'damageToDeal' từ hàm Shoot()
+    private void FireWithSpread(float damageToDeal)
     {
-        // 1. Tính toán một góc lệch ngẫu nhiên trong khoảng -spread/2 đến +spread/2
+        // 1. Tính toán góc lệch
         float randomAngle = Random.Range(-spreadAngle / 2, spreadAngle / 2);
-
-        // 2. Tạo một Quaternion xoay dựa trên góc lệch đó
-        // Quaternion.Euler(0, 0, randomAngle) tạo ra một độ xoay quanh trục Z
         Quaternion spreadRotation = firePos.rotation * Quaternion.Euler(0, 0, randomAngle);
 
-        // 3. Tạo ra viên đạn tại vị trí và hướng đã được điều chỉnh độ tỏa
-        Instantiate(bullet, firePos.position, spreadRotation);
+        // 2. Tạo ra viên đạn
+        GameObject bulletGO = Instantiate(bullet, firePos.position, spreadRotation);
+        Bullet bulletScript = bulletGO.GetComponent<Bullet>();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayShotGunSound();
+        }
+
+        // 3. "Truyền" sát thương cho viên đạn (GIỐNG HỆT GUN.CS)
+        if (bulletScript != null)
+        {
+            bulletScript.Setup(damageToDeal);
+        }
+        else
+        {
+            Debug.LogError("Prefab đạn của Shotgun thiếu script 'Bullet'!");
+        }
     }
 }

@@ -28,7 +28,11 @@ public class EnemyAttackTrigger : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             Debug.Log("Player ra khỏi vùng tấn công!");
-            animator.SetBool("isTouchPlayer", false);
+            if (animator != null)
+            {
+                animator.SetBool("isTouchPlayer", false);
+
+            }
         }
     }
 }

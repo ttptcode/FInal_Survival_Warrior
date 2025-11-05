@@ -1,17 +1,20 @@
-// File: Bullet.cs (Đã nâng cấp)
-
 using UnityEngine;
 
+// Đây là phiên bản "dumb" của Bullet
+// Nó không biết gì về PlayerStats
 public class Bullet : MonoBehaviour
 {
-    [SerializeField] protected float speed = 10f; // Đổi thành protected
-    [SerializeField] protected float lifetime = 3f; // Đổi thành protected
-    [SerializeField] protected string[] destroyOnLayers; // Đổi thành protected
-    public float damage = 10f;
+    [SerializeField] protected float speed = 10f;
+    [SerializeField] protected float lifetime = 3f;
+    [SerializeField] protected string[] destroyOnLayers;
+    [SerializeField] protected GameObject bloodPrefab;
 
-    protected Rigidbody2D rb; // Đổi thành protected
+    // Biến này sẽ được 'Gun' gán giá trị
+    protected float damage;
 
-    // Đổi Start() thành virtual để lớp con có thể thêm chức năng
+    protected Rigidbody2D rb;
+
+    // Hàm Start() giờ rất đơn giản
     protected virtual void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -19,14 +22,24 @@ public class Bullet : MonoBehaviour
         Destroy(gameObject, lifetime);
     }
 
-    // Rất quan trọng: Đổi thành protected virtual
+    // Hàm này được gọi TỪ BÊN NGOÀI (bởi Gun)
+    public virtual void Setup(float finalDamage)
+    {
+        // Nhận và lưu lại sát thương
+        this.damage = finalDamage;
+    }
+
+    // Hàm va chạm giờ chỉ dùng 'damage' đã được gán
     protected virtual void OnTriggerEnter2D(Collider2D other)
     {
         Enemy enemy = other.GetComponent<Enemy>();
         if (enemy != null)
         {
+            // Gây sát thương bằng giá trị đã được truyền vào
             enemy.TakeDamage(damage);
-            Destroy(gameObject); // Đạn thường sẽ tự hủy ngay
+            GameObject blood = Instantiate(bloodPrefab, transform.position, Quaternion.identity);
+            Destroy(blood, 1f);
+            Destroy(gameObject);
             return;
         }
 

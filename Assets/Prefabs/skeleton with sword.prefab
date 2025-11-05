@@ -642,9 +642,12 @@ MonoBehaviour:
   player2: {fileID: 0}
   agent: {fileID: 839225835033839150}
   healthBar: {fileID: 2734080172533856819}
+  playerStats: {fileID: 0}
   moveSpeed: 3
-  maxHealth: 50
+  maxHealth: 60
   currentHealth: 0
+  doDamage: 10
+  coinPrefab: {fileID: 4154991693655531722, guid: 3bfe841a02cb16c408e779c040e75703, type: 3}
 --- !u!95 &5445384676176331909
 Animator:
   serializedVersion: 7

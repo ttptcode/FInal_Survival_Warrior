@@ -8,28 +8,55 @@ public class Enemy : MonoBehaviour
     [Header("References")]
     public Transform player;
     public Animator animator;
-    public PlayerMovement player2; // Tham chiếu đến player script
+    public PlayerMovement player2;
     public NavMeshAgent agent;
     public Image healthBar;
+
+    // THAY ĐỔI: Chuyển sang protected để lớp con có thể truy cập
+    protected PlayerStats playerStats;
 
     [Header("Settings")]
     public float moveSpeed = 2f;
     public float maxHealth = 100f;
     public float currentHealth;
+    public float doDamage = 20f;
 
-    private bool facingRight = true;
-    private bool isDead = false;
+    // THAY ĐỔI: Chuyển sang protected
+    protected bool facingRight = true;
+    protected bool isDead = false;
 
-    private void Start()
+    [Header("Loot")]
+    [Tooltip("Kéo Prefab Coin của bạn vào đây")]
+    [SerializeField] private GameObject coinPrefab;
+
+    public void Setup(float bonusHP)
     {
+        maxHealth += bonusHP;
         currentHealth = maxHealth;
-        isDead = false;
     }
 
+    protected virtual void Start() // THAY ĐỔI: Thêm 'virtual'
+    {
+        // Tự động tìm PlayerStats nếu chưa gán
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player").transform;
+        }
+
+        if (player != null)
+        {
+            playerStats = player.GetComponent<PlayerStats>();
+        }
+
+        if (playerStats == null)
+        {
+            // Dự phòng tìm bằng Instance (Singleton)
+            playerStats = PlayerStats.Instance;
+        }
+    }
 
     void Awake()
     {
-        // Cho phép NavMesh hoạt động trên mặt phẳng 2D
         if (agent == null)
             agent = GetComponent<NavMeshAgent>();
 
@@ -38,22 +65,38 @@ public class Enemy : MonoBehaviour
         agent.speed = moveSpeed;
     }
 
-    void Update()
+    // THAY ĐỔI: Thêm 'protected virtual'
+    protected virtual void Update()
     {
-        if (player == null)
+        // Kiểm tra Player đã chết chưa
+        if (isDead || player == null || (playerStats != null && playerStats.isDead))
         {
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+            }
+            if (playerStats != null && playerStats.isDead)
+            {
+                //animator.SetBool("isPlayerDead", true);
+            }
             return;
         }
 
-        // Cập nhật điểm đến là vị trí player
-        agent.SetDestination(player.position);
+        // Logic di chuyển cơ bản
+        if (agent.isOnNavMesh)
+        {
+            agent.isStopped = false; // Kẻ thù 'Enemy' cơ bản luôn di chuyển
+            agent.SetDestination(player.position);
+        }
 
+        bool isMoving = agent.velocity.magnitude > 0.1f;
+        //animator.SetBool("isMoving", isMoving);
 
-        // Lật hướng theo hướng di chuyển
         Flip();
     }
 
-    private void Flip()
+    // THAY ĐỔI: Thêm 'protected virtual'
+    protected virtual void Flip()
     {
         if (agent.velocity.x > 0 && !facingRight)
         {
@@ -71,57 +114,52 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // Gọi khi enemy tấn công trúng player
-    public void KillPlayer()
+    public void AttackPlayer()
     {
-        if (player2 != null)
+        if (playerStats != null)
         {
-
-            // Hủy player
-            Destroy(player2.gameObject);
+            playerStats.TakeDamage(doDamage);
         }
     }
+
     public virtual void TakeDamage(float damage)
     {
-        // Nếu đã chết rồi thì không nhận thêm sát thương nữa
+        // ... (Code TakeDamage giữ nguyên) ...
         if (isDead) return;
-
         currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
         UpdateHpBar();
-
         if (currentHealth <= 0)
         {
-            // Đánh dấu là đã chết và gọi Die()
-            isDead = true;
             Die();
         }
     }
+
     protected virtual void Die()
     {
-        // Trigger animation chết (nếu có)
+        // ... (Code Die giữ nguyên) ...
+        if (isDead) return;
+        isDead = true;
         animator.SetTrigger("die");
-
-        // Vô hiệu hoá Collider để không bị bắn trúng nữa
-        GetComponent<Collider2D>().enabled = false;
-
-        // Dừng agent lại MỘT CÁCH AN TOÀN
         if (agent != null && agent.isOnNavMesh)
         {
             agent.isStopped = true;
-            agent.velocity = Vector3.zero; // Dừng hẳn chuyển động vật lý
+            agent.velocity = Vector3.zero;
         }
-
-        // Hủy game object ngay lập tức
-        Destroy(gameObject);
+        GetComponent<Collider2D>().enabled = false;
+        if (coinPrefab != null)
+        {
+            Instantiate(coinPrefab, transform.position, Quaternion.identity);
+        }
+        Destroy(gameObject, 2f);
     }
+
     protected void UpdateHpBar()
     {
+        // ... (Code UpdateHpBar giữ nguyên) ...
         if (healthBar != null)
         {
             healthBar.fillAmount = currentHealth / maxHealth;
-
-
         }
     }
 }

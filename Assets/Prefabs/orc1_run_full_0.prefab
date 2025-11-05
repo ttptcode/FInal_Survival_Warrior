@@ -301,6 +301,7 @@ MonoBehaviour:
   moveSpeed: 3
   maxHealth: 100
   currentHealth: 0
+  coinPrefab: {fileID: 4154991693655531722, guid: 3bfe841a02cb16c408e779c040e75703, type: 3}
 --- !u!210 &1009051041554764910
 SortingGroup:
   m_ObjectHideFlags: 0
